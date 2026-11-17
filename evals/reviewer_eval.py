@@ -3,6 +3,8 @@
 Usage: python -m evals.reviewer_eval [--runtime claude] [--model sonnet]
 Each case patches a temp copy of the repo and asks the reviewer for a verdict.
 Bug cases should get changes_requested; the control case should be approved.
+Cases are anchored on frozen copies in evals/baseline/, so later changes to
+orders/ do not break the eval.
 """
 from __future__ import annotations
 
@@ -20,6 +22,7 @@ from factory.runtime import extract_json_block, get_runtime
 from factory.schemas import Review, Task
 
 ROOT = Path(__file__).resolve().parents[1]
+BASELINE = ROOT / "evals" / "baseline"
 ORDER = "orders/order.py"
 TESTS = "tests/orders/test_order.py"
 GOAL = "Allow cancelling the remaining quantity of a partially filled order. Filled quantity is kept."
@@ -65,7 +68,7 @@ def apply_edits(case: Case) -> dict[str, tuple[str, str]]:
     """Return {path: (original, patched)} for every file the case touches."""
     files: dict[str, tuple[str, str]] = {}
     for path, old, new in case.edits:
-        original = (ROOT / path).read_text(encoding="utf-8")
+        original = (BASELINE / path).read_text(encoding="utf-8")
         current = files.get(path, (original, original))[1]
         if old == "":
             patched = current + new
