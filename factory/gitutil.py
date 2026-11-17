@@ -10,9 +10,12 @@ EXCLUDE_FACTORY = ":(exclude).factory"
 
 
 def git(repo: Path, *args: str, strip: bool = True) -> str:
-    proc = subprocess.run(["git", *args], cwd=repo, capture_output=True, text=True, encoding="utf-8")
+    proc = subprocess.run(
+        ["git", *args], cwd=repo, capture_output=True, text=True, encoding="utf-8",
+        errors="replace", stdin=subprocess.DEVNULL,
+    )
     if proc.returncode != 0:
-        raise GitError(f"git {' '.join(args)} failed: {proc.stderr.strip()}")
+        raise GitError(f"git {' '.join(args)} failed: {proc.stderr.strip() or proc.stdout.strip()}")
     return proc.stdout.strip() if strip else proc.stdout
 
 
@@ -76,11 +79,11 @@ def is_ancestor(repo: Path, ancestor: str, tip: str = "HEAD") -> bool:
 
 
 def diff(repo: Path, base: str, tip: str) -> str:
-    return git(repo, "diff", base, tip, "--", ".", EXCLUDE_FACTORY, strip=False)
+    return git(repo, "diff", "--no-color", "--no-ext-diff", base, tip, "--", ".", EXCLUDE_FACTORY, strip=False)
 
 
 def working_diff(repo: Path) -> str:
-    return git(repo, "diff", "HEAD", "--", ".", EXCLUDE_FACTORY, strip=False)
+    return git(repo, "diff", "--no-color", "--no-ext-diff", "HEAD", "--", ".", EXCLUDE_FACTORY, strip=False)
 
 
 def commit_all_except_factory(repo: Path, message: str) -> str:
@@ -91,5 +94,5 @@ def commit_all_except_factory(repo: Path, message: str) -> str:
 
 def commit_paths(repo: Path, paths: list[str], message: str) -> str:
     git(repo, "add", "--", *paths)
-    git(repo, "commit", "-q", "-m", message)
+    git(repo, "commit", "-q", "-m", message, "--", *paths)
     return head(repo)

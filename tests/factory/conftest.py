@@ -15,6 +15,10 @@ def write(path, text):
 @pytest.fixture
 def repo(tmp_path, monkeypatch):
     """A small git repo shaped like this one: orders/, protected tests/invariants/, role prompts."""
+    empty_config = tmp_path / "empty.gitconfig"
+    empty_config.write_text("", encoding="utf-8")
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(empty_config))
+    monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
     r = tmp_path / "repo"
     r.mkdir()
     git(r, "init", "-q", "-b", "main")

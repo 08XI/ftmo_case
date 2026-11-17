@@ -39,3 +39,24 @@ def test_diff_excludes_factory(repo):
     diff = gitutil.diff(repo, base, "HEAD")
     assert "orders/order.py" in diff
     assert ".factory" not in diff
+
+
+def test_working_diff_tolerates_non_utf8_output(repo):
+    (repo / "latin.txt").write_bytes(b"caf\xe9\n")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "latin")
+    (repo / "latin.txt").write_bytes(b"caf\xe9!\n")
+    out = gitutil.working_diff(repo)
+    assert isinstance(out, str)
+    assert "caf" in out
+
+
+def test_commit_paths_ignores_other_staged_files(repo):
+    write(repo / "s.txt", "staged\n")
+    write(repo / "o.txt", "other\n")
+    git(repo, "add", "s.txt")
+    sha = gitutil.commit_paths(repo, ["o.txt"], "m")
+    assert gitutil.files_in_commit(repo, sha) == ["o.txt"]
+    assert gitutil.changed_paths(repo) == ["s.txt"]
+    status = gitutil.git(repo, "status", "--porcelain")
+    assert status.startswith("A  s.txt")
