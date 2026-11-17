@@ -52,6 +52,6 @@ class Order:
         self.state = OrderState.FILLED if self.filled == self.quantity else OrderState.PARTIALLY_FILLED
 
     def cancel(self) -> None:
-        if self.state is not OrderState.NEW:
+        if self.state not in (OrderState.NEW, OrderState.PARTIALLY_FILLED):
             raise OrderError(f"cannot cancel order in state {self.state.value}")
         self.state = OrderState.CANCELLED
