@@ -1,0 +1,20 @@
+{
+  "verdict": "approved",
+  "summary": "The one-line guard change in Order.cancel() matches the approved plan. It allows cancel from NEW and PARTIALLY_FILLED. The guard still raises before any mutation, and cancel() only sets state, so `filled` is never touched. fill() is unchanged and rejects CANCELLED and FILLED orders, so a cancelled partial order cannot be filled further. The new tests cover each case in the plan's test plan. They assert state and `filled` after both successful and rejected operations. I read the code and diff but did not run pytest myself. The factory run shows 79 passed, which includes the protected invariant tests. The diff has no secrets and no network or file access. It does not touch tests/invariants/ or .factory/tasks/.",
+  "findings": [
+    {
+      "severity": "minor",
+      "file": "tests/orders/test_order.py",
+      "line": 63,
+      "message": "test_cannot_cancel_filled_order never checks that filled is unchanged after a rejected cancel from FILLED. This is a small gap against the 'rejected operation does not mutate' invariant, which the plan lists under that test. Adding `assert order.filled == Decimal(\"10\")` is already present, so nothing is missing there. Optionally add a rejected-cancel test from a PARTIALLY_FILLED-then-FILLED path. No action is required."
+    }
+  ],
+  "invariants_checked": [
+    "filled never exceeds quantity",
+    "filled never decreases (cancel does not modify filled)",
+    "cancel never changes filled quantity",
+    "FILLED iff filled == quantity (a cancelled partial order stays CANCELLED with filled < quantity)",
+    "FILLED and CANCELLED are terminal (cancel raises from both; fill raises from CANCELLED)",
+    "a rejected operation does not change the order (guard raises before any assignment)"
+  ]
+}
