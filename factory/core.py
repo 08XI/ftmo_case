@@ -245,3 +245,76 @@ def approve_plan(ref: TaskRef, user: str | None = None, note: str | None = None)
                           started_at=now, ended_at=now)
     _commit_ledger(ref, entry, ["plan.md"])
     return entry
+
+
+def _last_reviewer_requested_changes(ref: TaskRef, entries: list[LedgerEntry]) -> str | None:
+    """Name of the latest review file if it requested changes and no implementer ran since."""
+    for entry in reversed(entries):
+        if entry.role == "implementer":
+            return None
+        if entry.role == "reviewer":
+            if verdict_reader(ref)(entry) == "changes_requested":
+                return next(n for n in entry.outputs if n.startswith("review-"))
+            return None
+    return None
+
+
+def run_implementer(ref: TaskRef, runtime: Runtime) -> LedgerEntry:
+    task, entries = _require(ref, "implementer")
+    leftover = gitutil.changed_paths(ref.repo)
+    if any(p.startswith(FACTORY_PREFIX) for p in leftover):
+        raise FactoryError("uncommitted changes under .factory/; restore them before running an agent")
+    head_before = gitutil.head(ref.repo)
+    inputs = {**_hash_of(ref, "task.json", "plan.md"), "head": head_before}
+    sections = [("Task", _read(ref, "task.json")), ("Approved plan", _read(ref, "plan.md"))]
+    last_handoff = latest_output(entries, "handoff-")
+    if last_handoff:
+        inputs.update(_hash_of(ref, last_handoff[0]))
+        sections.append(("Previous hand-off - resume from here", _read(ref, last_handoff[0])))
+    review_name = _last_reviewer_requested_changes(ref, entries)
+    if review_name:
+        inputs.update(_hash_of(ref, review_name))
+        sections.append(("Reviewer findings to address", _read(ref, review_name)))
+    if leftover:
+        sections.append(("Uncommitted work from an interrupted session",
+                         f"Files: {', '.join(leftover)}\n\n```diff\n{gitutil.working_diff(ref.repo)}\n```"))
+
+    handoff, result, role_sha, started = _call_agent(ref, task, entries, "implementer", runtime, sections, Handoff)
+
+    changed = gitutil.changed_paths(ref.repo)
+    bad = protected_violations(changed, [*task.protected_paths, ".factory/**"])
+    if bad:
+        raise ProtectedPathError(f"implementer changed protected paths: {', '.join(bad)}. Nothing recorded; "
+                                 "inspect with `git status` and restore them.")
+    seq = len(entries)
+    session = sum(1 for e in entries if e.role == "implementer") + 1
+    commits = []
+    if changed:
+        message = (f"{ref.task_id}: implementer session {session}\n\n" + _trailers(ref, seq, "implementer")
+                   + f"Co-authored-by: {result.runtime} ({result.model}) <agent@factory.invalid>\n")
+        commits.append(gitutil.commit_all_except_factory(ref.repo, message))
+    name = f"handoff-{session:03d}.json"
+    _write_model(ref.path(name), handoff)
+    entry = ledger.append(ref.dir, **_agent_fields(ref, task, "implementer", result, role_sha, started,
+                                                   inputs=inputs, outputs=_hash_of(ref, name), commits=commits))
+    _commit_ledger(ref, entry, [name])
+    return entry
+
+
+def record_human(ref: TaskRef, message: str, user: str | None = None) -> LedgerEntry:
+    task, entries = _require(ref, "human_change")
+    changed = gitutil.changed_paths(ref.repo)
+    if any(p.startswith(FACTORY_PREFIX) for p in changed):
+        raise FactoryError("changes under .factory/ cannot be recorded; only the CLI writes there")
+    if not changed:
+        raise FactoryError("nothing to record: no uncommitted changes")
+    user = user or resolve_user(ref.repo)
+    started = utc_now()
+    head_before = gitutil.head(ref.repo)
+    sha = gitutil.commit_all_except_factory(
+        ref.repo, f"{ref.task_id}: {message}\n\n" + _trailers(ref, len(entries), "human_change"))
+    entry = ledger.append(ref.dir, task=ref.task_id, role="human_change", actor=_human(user), on_behalf_of=user,
+                          inputs={"head": head_before}, commits=[sha], note=message,
+                          started_at=started, ended_at=utc_now())
+    _commit_ledger(ref, entry, [])
+    return entry
