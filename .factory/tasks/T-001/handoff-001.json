@@ -1,0 +1,20 @@
+{
+  "summary": "Order.cancel() now allows cancelling from PARTIALLY_FILLED as well as NEW. filled is untouched, FILLED and CANCELLED remain terminal and cancel from them raises OrderError without mutation. Added behaviour tests written first; full suite passes.",
+  "done": [
+    "Wrote failing tests first and confirmed 3 failed before the change",
+    "Changed the cancel() guard in orders/order.py to allow NEW and PARTIALLY_FILLED",
+    "Added tests: cancel partially filled, cannot fill cancelled partial order, cannot cancel filled order, cannot cancel twice (from NEW and PARTIALLY_FILLED)",
+    "Ran python -m pytest -q: 79 passed"
+  ],
+  "remaining": [],
+  "open_questions": [
+    "Should a cancelled partial order keep a non-zero remaining? The plan keeps remaining = quantity - filled; confirm no downstream code expects 0.",
+    "Cancelling an already CANCELLED order raises OrderError (not idempotent), per the plan; confirm this is the desired behaviour."
+  ],
+  "files_touched": [
+    "orders/order.py",
+    "tests/orders/test_order.py"
+  ],
+  "tests": "passing",
+  "status": "complete"
+}
