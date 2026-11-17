@@ -37,7 +37,7 @@ What it is not:
 | Team lead | Setups live in people's heads | Role prompts in the repo, hashed | Shared prompt library | Mandated tool |
 | Platform engineer | What did the agent touch, at what cost? | Ledger: files, cost, tokens | Dashboard | - |
 | Compliance / audit | Who approved this? | Ledger plus independent PR approval | Signed attestations | Agent as accountable author |
-| Reviewer | Plausible but wrong code | Review map from `review.json`, blind first pass | - | Reviewer verdict replaces human |
+| Reviewer | Plausible but wrong code | Review map from `review-NNN.json`, blind first pass | - | Reviewer verdict replaces human |
 | Non-engineer | Cannot use the process | Sketch only (section 8) | Template repos | Own deploys |
 
 ## 3. Design and walkthrough (8 min)

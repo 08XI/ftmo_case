@@ -23,6 +23,10 @@ Agent time and cost are tracked separately; agents often run while the human rev
 | 2026-11-17 11:32 | Task 14: GitHub Action | ? | 1.5 min | - | Workflow YAML (Sonnet) | Not yet. Controller reviewed inline | - | - |
 | 2026-11-17 11:34 | Task 15: demo fixtures + fake dry run | ? | 3 min | - | Fixtures, README, dry run (Sonnet); controller re-ran dry run + tamper demo | Not yet | - | Plan ran the dry run before committing fixtures (a clone sees only commits): reordered. Plan expected 7 ledger rows; the listed roles make 6, and 6 is correct |
 | 2026-11-17 11:39 | Task 18 Steps 1–4, 6: reviewer eval harness (no live run) | ? | 2 min | - | Eval cases and anchor test (Sonnet) | Not yet. Controller diffed against plan | - | Step 5 (live eval, costs API credit) not run: waits for the user |
+| 2026-11-17 11:41 | Task 19: PROTOCOL.md, README, presentation | ? | 3 min | - | All three docs (Sonnet), from code + design + review notes | Not yet: `docs/presentation.md` needs your review, especially the §2 people table (the agent wrote it without the case brief) | - | Reviewer eval score and live demo are placeholders until Tasks 16, 17 and 18 Step 5 run |
+| 2026-11-17 11:04–11:46 | Controller session (Opus): dispatch, plan-diff checks, review triage, build log | ? | 42 min wall-clock | - | Orchestration of 29 subagent runs (17 implementer, 7 review, 5 fix) | - | - | - |
+
+**Totals so far (Tasks 1–15, 18 Steps 1–4 and 6, 19):** agent wall-clock about 42 min for the controller session; the subagents ran inside it. Human time for this part is unknown ("?"): the user was not asked to review per task. Not done yet: Task 16 (live Claude run), Task 17 (GitHub repo, PR, branch protection), Task 18 Step 5 (live eval), Task 19 Step 7 (screen capture).
 
 ## Deviations from the plan (Tasks 1–15, 18)
 
