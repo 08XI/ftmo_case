@@ -77,3 +77,54 @@ def test_approval_must_come_from_someone_else(repo):
 def test_approval_is_case_insensitive(repo):
     ref = happy_path(repo)
     assert "independent human approval" in failing(verify(repo, ref.task_id, approvers=["ALICE"]))
+
+
+def test_approvers_are_normalised(repo):
+    ref = happy_path(repo)
+    for bad in ([""], [" Alice "], ["@alice"]):
+        assert "independent human approval" in failing(verify(repo, ref.task_id, approvers=bad)), bad
+    assert verify(repo, ref.task_id, approvers=[" bob "]).ok
+
+
+def test_uncommitted_task_file_is_detected(repo):
+    ref = happy_path(repo)
+    with ref.path("plan.md").open("a", encoding="utf-8", newline="\n") as fh:
+        fh.write("- uncommitted\n")
+    assert "task folder is committed" in failing(verify(repo, ref.task_id))
+
+
+def test_base_commit_must_be_an_ancestor(repo):
+    from factory.verify import _base_errors
+
+    ref = happy_path(repo)
+    task = core.load_task(ref)
+    assert _base_errors(repo, task) == []
+    git(repo, "checkout", "-q", "--orphan", "other")
+    write(repo / "other.txt", "x\n")
+    git(repo, "add", "other.txt")
+    git(repo, "commit", "-qm", "orphan")
+    orphan = gitutil.git(repo, "rev-parse", "HEAD")
+    git(repo, "checkout", "-qf", task.branch)
+    assert _base_errors(repo, task.model_copy(update={"base_commit": orphan}))
+
+
+def test_forged_reviewed_head_is_rejected(repo):
+    from factory import verify as v
+
+    ref = happy_path(repo)
+    entries = ledger.load(ref.dir)
+    last = entries[-1]
+    forged = last.model_copy(update={"inputs": {**last.inputs, "head": "HEAD"}})
+    errors = v._review_errors(repo, [*entries[:-1], forged], core.verdict_reader(ref), [])
+    assert errors and "not on this branch" in errors[0]
+
+
+def test_custody_rejects_path_like_names(repo):
+    from factory.verify import _custody_errors
+
+    ref = happy_path(repo)
+    entries = ledger.load(ref.dir)
+    last = entries[-1]
+    bad = last.model_copy(update={"outputs": {**last.outputs, "../x": "0" * 64}})
+    errors = _custody_errors(ref, [*entries[:-1], bad])
+    assert any("../x: invalid file name in ledger" in e for e in errors)

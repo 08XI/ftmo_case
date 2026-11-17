@@ -1,6 +1,7 @@
 """factory verify: recompute the ledger and check it against git. Runs locally and in CI."""
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -54,6 +55,8 @@ def verify(repo: Path, task_id: str, approvers: list[str] | None = None) -> Repo
     prefix = ref.rel("")
     code_commits = [c for c in commits if not _is_ledger_commit(repo, c, prefix)]
     checks = [
+        Check("task folder is committed", _uncommitted_errors(repo, ref)),
+        Check("base commit is an ancestor of HEAD", _base_errors(repo, task)),
         Check("ledger hash chain intact", ledger.check_chain(entries)),
         Check("each role filled by the right kind of actor", _actor_errors(entries)),
         Check("task files match the ledger (chain of custody)", _custody_errors(ref, entries)),
@@ -65,6 +68,17 @@ def verify(repo: Path, task_id: str, approvers: list[str] | None = None) -> Repo
     if approvers is not None:
         checks.append(Check("independent human approval", _approval_errors(task, entries, approvers)))
     return Report(task_id, checks)
+
+
+def _uncommitted_errors(repo: Path, ref: TaskRef) -> list[str]:
+    out = gitutil.git(repo, "status", "--porcelain", "--untracked-files=all", "--", ref.rel(""))
+    return [f"uncommitted change in task folder: {line.strip()}" for line in out.splitlines()]
+
+
+def _base_errors(repo: Path, task: Task) -> list[str]:
+    if gitutil.is_ancestor(repo, task.base_commit):
+        return []
+    return [f"base commit {task.base_commit[:8]} is not an ancestor of HEAD"]
 
 
 def _is_ledger_commit(repo: Path, sha: str, prefix: str) -> bool:
@@ -90,10 +104,19 @@ def _custody_errors(ref: TaskRef, entries: list[LedgerEntry]) -> list[str]:
                 errors.append(f"entry {e.seq}: input {name} is not the last recorded version")
         latest.update(e.outputs)
     for name, digest in latest.items():
+        if "/" in name or "\\" in name or ".." in name:
+            errors.append(f"{name}: invalid file name in ledger")
+            continue
         path = ref.path(name)
         if not path.exists():
             errors.append(f"{name}: recorded in the ledger but missing")
-        elif ledger.sha256_file(path) != digest:
+            continue
+        try:
+            actual = ledger.sha256_file(path)
+        except OSError as exc:
+            errors.append(f"{name}: cannot read ({exc.__class__.__name__})")
+            continue
+        if actual != digest:
             errors.append(f"{name}: changed outside the factory (hash mismatch)")
     for path in sorted(ref.dir.iterdir()):
         if path.name != ledger.LEDGER_FILE and path.name not in latest:
@@ -146,7 +169,7 @@ def _review_errors(repo: Path, entries: list[LedgerEntry], verdict_of: VerdictOf
     if not is_pr_ready(entries, verdict_of):
         return ["the last ledger entry must be a reviewer with verdict 'approved'"]
     reviewed = entries[-1].inputs.get("head", "")
-    if not reviewed or not gitutil.is_ancestor(repo, reviewed):
+    if not re.fullmatch(r"[0-9a-f]{40}", reviewed) or not gitutil.is_ancestor(repo, reviewed):
         return [f"reviewed commit {reviewed[:8] or '?'} is not on this branch"]
     try:
         after = set(gitutil.commits_between(repo, reviewed, "HEAD"))
@@ -157,6 +180,7 @@ def _review_errors(repo: Path, entries: list[LedgerEntry], verdict_of: VerdictOf
 
 
 def _approval_errors(task: Task, entries: list[LedgerEntry], approvers: list[str]) -> list[str]:
+    approvers = [a.strip().lstrip("@") for a in approvers if a.strip()]
     # GitHub logins are case-insensitive, so compare casefolded on both sides.
     excluded = {task.initiator.casefold()} | {e.actor.id.casefold() for e in entries if e.role == "plan_approval"}
     if any(a.casefold() not in excluded for a in approvers):
