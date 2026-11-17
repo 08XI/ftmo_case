@@ -105,8 +105,8 @@ Tool policies (`factory/prompts.py`):
 | Role | Allowed | Denied |
 |---|---|---|
 | planner | Read, Grep, Glob | Edit, Write, Bash |
-| implementer | Read, Grep, Glob, Edit, Write, `Bash(python -m pytest:*)` | Edit/Write on protected paths |
-| reviewer | Read, Grep, Glob, `Bash(python -m pytest:*)` | Edit, Write, `Read(.factory/tasks/**)` |
+| implementer | Read, Grep, Glob, Edit, Write, `Bash(python -m pytest:*)`, `PowerShell(python -m pytest:*)` | Edit/Write on protected paths |
+| reviewer | Read, Grep, Glob, `Bash(python -m pytest:*)`, `PowerShell(python -m pytest:*)` | Edit, Write, `Read(.factory/tasks/**)` |
 
 ## 8. Limits
 

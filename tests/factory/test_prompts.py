@@ -28,3 +28,11 @@ def test_reviewer_cannot_read_task_folders():
     policy = policy_for("reviewer", TASK)
     assert "Read(.factory/tasks/**)" in policy.denied
     assert "Edit" in policy.denied
+
+
+def test_test_runners_may_use_pytest_through_bash_or_powershell():
+    # On Windows, Claude Code also offers a PowerShell tool; a live run was denied pytest there.
+    for role in ("implementer", "reviewer"):
+        allowed = policy_for(role, TASK).allowed
+        assert "Bash(python -m pytest:*)" in allowed
+        assert "PowerShell(python -m pytest:*)" in allowed

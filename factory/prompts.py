@@ -11,7 +11,8 @@ from .schemas import Task
 
 ROLES_DIR = Path(".factory") / "roles"
 READ_TOOLS = ("Read", "Grep", "Glob")
-PYTEST = "Bash(python -m pytest:*)"
+# Claude Code on Windows can run shell commands through Bash or PowerShell; allow pytest in both.
+PYTEST = ("Bash(python -m pytest:*)", "PowerShell(python -m pytest:*)")
 
 
 def role_prompt_path(repo: Path, role: str) -> Path:
@@ -37,7 +38,7 @@ def policy_for(role: str, task: Task) -> ToolPolicy:
         return ToolPolicy(allowed=READ_TOOLS, denied=("Edit", "Write", "Bash"))
     if role == "implementer":
         denied = tuple(f"{tool}({path})" for path in protected for tool in ("Edit", "Write"))
-        return ToolPolicy(allowed=(*READ_TOOLS, "Edit", "Write", PYTEST), denied=denied)
+        return ToolPolicy(allowed=(*READ_TOOLS, "Edit", "Write", *PYTEST), denied=denied)
     if role == "reviewer":
-        return ToolPolicy(allowed=(*READ_TOOLS, PYTEST), denied=("Edit", "Write", "Read(.factory/tasks/**)"))
+        return ToolPolicy(allowed=(*READ_TOOLS, *PYTEST), denied=("Edit", "Write", "Read(.factory/tasks/**)"))
     raise ValueError(f"no tool policy for role {role!r}")
