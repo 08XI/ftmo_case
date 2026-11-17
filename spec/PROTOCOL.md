@@ -88,7 +88,7 @@ Nine checks, run on the task branch:
 8. roles ran in the required order
 9. reviewer approved the final code (the reviewed `head` is on the branch and no code commit came after it)
 
-With `--check-approvals --approver <login>` (CI) there is a tenth check, **independent human approval**. At least one approver must be neither the initiator nor a plan approver. Logins are trimmed, a leading `@` is dropped, and comparison is case-insensitive.
+With `--check-approvals --approver <login>` (CI) there is a tenth check, **independent human approval**. At least one approver must be neither the initiator nor a plan approver. Logins are trimmed, a leading `@` is dropped, and comparison is case-insensitive. In this repository's workflow the tenth check runs only when the repo variable `FACTORY_REQUIRE_APPROVAL` is `true`: a private repo on the free plan cannot enforce reviews with branch protection, so the check stays off until it can.
 
 Protected paths are the task's `protected_paths` (default `tests/invariants/**`) plus `.factory/**`.
 
