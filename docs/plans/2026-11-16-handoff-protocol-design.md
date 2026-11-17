@@ -168,7 +168,18 @@ other than `claude` and `fake`, metrics dashboard.
   first 90 days (pilot with 2 teams → signing → non-engineer path).
 - Build log: delegated, reviewed, hand-written, what went wrong, time spent.
 
-## 12. Time budget (~4 h)
+## 12. Time budget (~4 h of human time)
 
-Design 30 min · CLI + ledger + verify + tests 1.5 h · roles + live run + Action 1 h ·
-presentation + build log + recording 1 h.
+The case study's ~4 h is the candidate's own time. Agent runtime is tracked
+separately; most of it overlaps human time (review task N while an agent builds N+1).
+
+| Human activity | Budget |
+|---|---|
+| Design: brainstorm, decisions, plan review | 30 min |
+| Steering and reviewing agent implementation (Tasks 1–15) | 1 h |
+| Live Claude run, GitHub repo, Action, branch protection (Tasks 16–17) | 45 min |
+| Presentation, build log, demo recording | 1 h 15 min |
+
+Agent time (expected): ~1–1.5 h wall-clock for Tasks 1–15 with Sonnet subagents,
+plus live role runs. `BUILD_LOG.md` records human time, agent time and agent cost
+in separate columns.

@@ -1,6 +1,6 @@
 # Hand-off Protocol with Provenance — Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development to implement this plan task-by-task (one fresh subagent per task, review between tasks). Intended executor: Sonnet, in its own session. Read "Execution guide" below before Task 1.
 
 **Goal:** Build `factory`, a Python CLI that moves one change through planner → human plan gate → implementer session(s) → blind reviewer → GitHub PR. Every hand-off is a schema-validated file recorded in a hash-chained ledger, and `factory verify` checks the result locally and in CI.
 
@@ -17,9 +17,8 @@
 - Work from the repo root `C:\Users\miro8\case` in Git Bash.
 - Python: `.venv/Scripts/python` (Windows venv). In commands below, `PY=.venv/Scripts/python`.
 - All text files are LF. `.gitattributes` enforces this, because ledger hashes depend on exact bytes. When writing files from Python, always pass `encoding="utf-8", newline="\n"`.
-- Commit after every task. Every commit message ends with:
-  `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`
-- Log time and notable events in `BUILD_LOG.md` at the end of each task. Record what was delegated, what was reviewed, what was hand-written and what went wrong.
+- Commit after every task. End every commit message with the attribution line your session's system instructions give. The `Co-Authored-By` lines in this plan's commit commands are placeholders; swap in your own.
+- Log time and notable events in `BUILD_LOG.md` at the end of each task. Keep human time and agent time apart. Record what was delegated, what was reviewed, what was hand-written and what went wrong.
 - Known environment facts (checked 2026-11-16):
   - Python 3.12.10, `gh` 2.88.1 and `claude` 2.1.316 are installed. `uv` is not installed.
   - Global `core.autocrlf=true`, which is why `.gitattributes` is needed.
@@ -27,6 +26,38 @@
   - **On failure it can return `is_error: true` with `subtype: "success"`**, so always check `is_error`.
   - Flags confirmed to exist: `--setting-sources`, `--strict-mcp-config`, `--no-session-persistence`, `--allowedTools <tools...>`, `--disallowedTools <tools...>`, `--permission-mode`, `--model`.
   - The local `claude` CLI OAuth session had expired at the time of the check. Re-login before Task 16.
+
+## Execution guide (controller session)
+
+**Who does what**
+
+| Tasks | Executor | Gate before the next task |
+|---|---|---|
+| 1–15 | One implementer subagent per task (Sonnet), then a spec + code-quality review subagent | Task's tests pass, the full suite (`.venv/Scripts/python -m pytest -q`) passes, committed |
+| 16 | Controller, with the user | **STOP and ask the user** to log in to `claude` first, and ask whether to spend API credit on a live run |
+| 17 | Controller, with the user | **STOP and ask** before each step: it creates a public repo, pushes, and changes branch protection |
+| 18 | Subagent for Steps 1–4 and 6 | **STOP and ask** before Step 5 (live eval spends API credit) |
+| 19 | One subagent for docs | The user reviews `docs/presentation.md` |
+
+**Dependencies.** Tasks run strictly in order 1 → 15, because each builds on the files and commits of the one before. Don't run implementer subagents in parallel: they share one working tree and one git index. Task 18 Steps 1–4 can run any time after Task 13.
+
+**Rules for every implementer subagent** (copy into each subagent prompt):
+1. Do only your task. Copy code from the plan exactly. If plan code is wrong (a test fails for a reason the plan doesn't predict), fix it as little as possible and report the deviation and why in your final message.
+2. Follow the TDD steps: run the test, see it fail for the expected reason, implement, see it pass.
+3. Before committing, run the full suite `.venv/Scripts/python -m pytest -q`. Never commit with failing tests.
+4. Never push, never create GitHub repos, never call the live `claude` runtime. Use the `fake` runtime only.
+5. Don't edit `tests/invariants/` after Task 2, or `.factory/tasks/`, by hand.
+6. Report: files changed, test counts, deviations from the plan, and time taken.
+
+**Controller duties after each task**
+- Check the reported deviations against the design doc. If one changes behaviour, record it in `BUILD_LOG.md`.
+- Append a `BUILD_LOG.md` row: agent time = subagent wall-clock; human time = "?" unless the user says otherwise.
+- Every 3–4 tasks, send the user a 2–3 line progress note.
+
+**Done for the agent-only part (Tasks 1–15, 18 Steps 1–4, 19):**
+- the full suite passes
+- the Task 15 dry run prints `RESULT: PASS` and a 7-row ledger
+- the working tree is clean on `main`
 
 ---
 
@@ -130,13 +161,18 @@ whether you are building the factory or playing a factory role (planner, impleme
 ```markdown
 # Build log
 
-Time budget: ~4 h total (design, prototype, presentation). Times are wall-clock.
+Budget: ~4 h of **human** time (design, steering, review, presentation).
+Agent time and cost are tracked separately; agents often run while the human reviews.
 
-| When | Step | Time | Delegated to agent | Reviewed by me | Written by hand | What went wrong |
-|---|---|---|---|---|---|---|
-| 2026-11-16 19:22 | Brainstorm + design doc | 10 min | Options, drafts of each design section | Every section, approved one by one | Choices: hand-off protocol, files in repo, claude -p, Python, provenance deep-dive, real GitHub PR | `claude -p` auth had expired locally |
-| 2026-11-16 19:31 | Implementation plan | 15 min | Full plan with code | Plan scope | - | - |
+| When | Step | Human time | Agent time | Agent cost | Delegated to agent | Reviewed by me | Written by hand | What went wrong |
+|---|---|---|---|---|---|---|---|---|
+| 2026-11-16 19:22 | Brainstorm + design doc | 10 min | 10 min | - | Options, drafts of each design section (Opus) | Every section, approved one by one | Choices: hand-off protocol, files in repo, claude -p, Python, provenance deep-dive, real GitHub PR | `claude -p` auth had expired locally |
+| 2026-11-16 19:31 | Implementation plan | 10 min | 15 min | - | Full plan with code (Opus) | Plan scope; human vs agent time split | - | First draft mixed human and agent time |
 ```
+
+Executors: add one row per task. Human time = time the user spent reading, deciding or
+typing for that task (ask the user if unknown; write "?" rather than guess). Agent time =
+wall-clock of the subagent run(s).
 
 **Step 8: Temporary entry point**
 
@@ -1603,11 +1639,11 @@ class RecordingRuntime(FakeRuntime):
         return super().run(**kwargs)
 
 
-def tests_pass(repo):
+def runner_pass(repo):
     return True, "1 passed"
 
 
-def tests_fail(repo):
+def runner_fail(repo):
     return False, "1 failed"
 
 
@@ -1623,7 +1659,7 @@ def start(repo, runtime=None):
 def happy_path(repo, runtime=None):
     ref, rt = start(repo, runtime)
     core.run_implementer(ref, rt)
-    core.run_reviewer(ref, rt, test_runner=tests_pass)
+    core.run_reviewer(ref, rt, test_runner=runner_pass)
     return ref
 ```
 
@@ -2134,14 +2170,14 @@ from factory import core, ledger
 from factory.runtime import FakeStep
 from factory.schemas import Review
 
-from .helpers import REVIEW_NO, RecordingRuntime, block, fake, start, tests_fail, tests_pass
+from .helpers import REVIEW_NO, RecordingRuntime, block, fake, start, runner_fail, runner_pass
 
 
 def test_reviewer_sees_diff_but_not_implementer_notes(repo):
     rt = RecordingRuntime(fake().steps)
     ref, _ = start(repo, rt)
     core.run_implementer(ref, rt)
-    entry = core.run_reviewer(ref, rt, test_runner=tests_pass)
+    entry = core.run_reviewer(ref, rt, test_runner=runner_pass)
     prompt = [p for role, p in rt.prompts if role == "reviewer"][0]
     assert "VALUE = 2" in prompt
     assert "Implemented partial cancel" not in prompt
@@ -2152,7 +2188,7 @@ def test_reviewer_sees_diff_but_not_implementer_notes(repo):
 def test_failing_tests_override_an_approval(repo):
     ref, rt = start(repo)
     core.run_implementer(ref, rt)
-    core.run_reviewer(ref, rt, test_runner=tests_fail)
+    core.run_reviewer(ref, rt, test_runner=runner_fail)
     review = Review.model_validate_json(ref.path("review-001.json").read_text(encoding="utf-8"))
     assert review.verdict == "changes_requested"
     assert review.findings[0].severity == "blocker"
@@ -2166,7 +2202,7 @@ def test_changes_requested_feeds_next_implementer_session(repo):
     })
     ref, _ = start(repo, rt)
     core.run_implementer(ref, rt)
-    core.run_reviewer(ref, rt, test_runner=tests_pass)
+    core.run_reviewer(ref, rt, test_runner=runner_pass)
     core.run_implementer(ref, rt)
     second = [p for role, p in rt.prompts if role == "implementer"][1]
     assert "Reviewer findings to address" in second and "add a test" in second
@@ -2308,9 +2344,8 @@ def test_change_after_review_needs_a_new_review(repo):
     ref = happy_path(repo)
     write(repo / "orders" / "order.py", "VALUE = 7\n")
     core.record_human(ref, "late tweak")
-    failed = failing(verify(repo, ref.task_id))
-    assert failed == {"roles ran in the required order", "reviewer approved the final code"} or \
-        failed == {"reviewer approved the final code"}
+    # human_change is allowed after an approved review, so only the review check fails
+    assert failing(verify(repo, ref.task_id)) == {"reviewer approved the final code"}
 
 
 def test_missing_review_fails(repo):
@@ -2503,7 +2538,7 @@ def _approval_errors(task: Task, entries: list[LedgerEntry], approvers: list[str
 **Step 4: Run the tests**
 
 Run: `.venv/Scripts/python -m pytest tests/factory -q`
-Expected: all pass. If `test_change_after_review_needs_a_new_review` fails, print `failing(...)`. The `record_human` entry is allowed after an approved review, so only "reviewer approved the final code" should fail. Tighten the assertion to that single name once confirmed.
+Expected: all pass (`test_verify.py`: 8 passed).
 
 **Step 5: Commit**
 
@@ -3002,10 +3037,10 @@ Tamper demo (after `factory verify` passes):
 
 Run:
 ```bash
-SCRATCH="C:/Users/miro8/AppData/Local/Temp/claude/b9e1c3dfad8e4268/7682d8c8-1a67-423c-9cf0-41309a06e0b2/scratchpad/dry"
-rm -rf "$SCRATCH" && git clone -q . "$SCRATCH" && cd "$SCRATCH"
-git config core.autocrlf false
-export FACTORY_USER=demo-user FACTORY_RUNTIME=fake FACTORY_FAKE_DIR="$PWD/demo/fake"
+SCRATCH="$(mktemp -d)/dry"
+git clone -q . "$SCRATCH" && cd "$SCRATCH"
+git config core.autocrlf false && git checkout -q -- .
+export FACTORY_USER=demo-user FACTORY_RUNTIME=fake FACTORY_FAKE_DIR="$(pwd -W)/demo/fake"
 F=/c/Users/miro8/case/.venv/Scripts/factory
 $F new "Cancel remaining quantity of partially filled orders" --goal "Partial cancel keeps filled" --id T-001
 $F run planner && $F approve-plan && $F run implementer && $F run implementer && $F run reviewer
