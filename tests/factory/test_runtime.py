@@ -70,3 +70,28 @@ def test_fake_runtime_from_dir(tmp_path):
     rt = FakeRuntime.from_dir(tmp_path)
     assert [s.text for s in rt.steps["implementer"]] == ["first", "second"]
     assert rt.steps["implementer"][0].files == {"orders/order.py": "V = 2\n"}
+
+
+def test_fake_runtime_from_dir_skips_stray_files(tmp_path):
+    (tmp_path / "planner-1.md").write_text("plan", encoding="utf-8")
+    (tmp_path / "notes-draft.md").write_text("stray", encoding="utf-8")
+    (tmp_path / "planner-1.files" / "__pycache__").mkdir(parents=True)
+    (tmp_path / "planner-1.files" / "__pycache__" / "x.pyc").write_text("junk", encoding="utf-8")
+    (tmp_path / "planner-1.files" / "a.txt").write_text("A\n", encoding="utf-8")
+    rt = FakeRuntime.from_dir(tmp_path)
+    assert list(rt.steps) == ["planner"]
+    assert rt.steps["planner"][0].text == "plan"
+    assert rt.steps["planner"][0].files == {"a.txt": "A\n"}
+
+
+def test_claude_runtime_timeout_raises_promptly(tmp_path, monkeypatch):
+    import sys
+    import time
+    sleeper = [sys.executable, "-c", "import time; time.sleep(30)"]
+    monkeypatch.setattr(ClaudeRuntime, "command", lambda self, policy: list(sleeper))
+    monkeypatch.setattr("factory.runtime.shutil.which", lambda name: sys.executable)
+    rt = ClaudeRuntime(executable="claude", timeout_s=1)
+    start = time.monotonic()
+    with pytest.raises(AgentRunError, match="timed out"):
+        rt.run(role="planner", prompt="p", policy=ToolPolicy(()), cwd=tmp_path, attempt=0)
+    assert time.monotonic() - start < 15

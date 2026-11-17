@@ -101,14 +101,20 @@ class ClaudeRuntime:
             raise AgentRunError(f"'{self.executable}' not found on PATH; install Claude Code or use --runtime fake")
         cmd = self.command(policy)
         cmd[0] = exe
+        proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                text=True, encoding="utf-8", errors="replace", cwd=cwd)
         try:
-            proc = subprocess.run(cmd, input=prompt, capture_output=True, text=True, encoding="utf-8",
-                                  cwd=cwd, timeout=self.timeout_s)
+            stdout, stderr = proc.communicate(input=prompt, timeout=self.timeout_s)
         except subprocess.TimeoutExpired as exc:
+            if os.name == "nt":
+                subprocess.run(["taskkill", "/F", "/T", "/PID", str(proc.pid)], capture_output=True)
+            else:
+                proc.kill()
+            proc.communicate()
             raise AgentRunError(f"{role} timed out after {self.timeout_s}s") from exc
-        if not proc.stdout.strip():
-            raise AgentRunError(f"{role} produced no output (exit {proc.returncode}): {proc.stderr.strip()[:500]}")
-        return parse_claude_output(proc.stdout)
+        if not stdout.strip():
+            raise AgentRunError(f"{role} produced no output (exit {proc.returncode}): {stderr.strip()[:500]}")
+        return parse_claude_output(stdout)
 
 
 @dataclass
@@ -147,12 +153,16 @@ class FakeRuntime:
         directory = Path(directory)
         found: dict[str, list[tuple[int, FakeStep]]] = {}
         for md in sorted(directory.glob("*-*.md")):
-            role, _, number = md.stem.rpartition("-")
+            m = re.fullmatch(r"(.+)-(\d+)", md.stem)
+            if m is None:
+                continue
+            role, number = m.groups()
             files_dir = directory / f"{md.stem}.files"
             files = {}
             if files_dir.is_dir():
                 files = {p.relative_to(files_dir).as_posix(): p.read_text(encoding="utf-8")
-                         for p in sorted(files_dir.rglob("*")) if p.is_file()}
+                         for p in sorted(files_dir.rglob("*"))
+                         if p.is_file() and "__pycache__" not in p.relative_to(files_dir).parts}
             found.setdefault(role, []).append((int(number), FakeStep(md.read_text(encoding="utf-8"), files)))
         return cls({role: [s for _, s in sorted(items, key=lambda t: t[0])] for role, items in found.items()})
 
