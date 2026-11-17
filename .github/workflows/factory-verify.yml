@@ -1,0 +1,57 @@
+name: factory-verify
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  pull_request_review:
+    types: [submitted, dismissed]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  verify:
+    name: verify
+    if: startsWith(github.event.pull_request.head.ref, 'factory/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -q -e ".[dev]"
+      - name: Collect current approvals (latest review per user)
+        id: approvals
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          args=""
+          for login in $(gh api "repos/$REPO/pulls/$PR/reviews" --paginate \
+              --jq 'group_by(.user.login) | map(last) | .[] | select(.state=="APPROVED") | .user.login'); do
+            args="$args --approver $login"
+          done
+          echo "args=$args" >> "$GITHUB_OUTPUT"
+      - name: factory verify
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          APPROVER_ARGS: ${{ steps.approvals.outputs.args }}
+        run: factory verify --task "${HEAD_REF#factory/}" --check-approvals $APPROVER_ARGS
+      - name: tests
+        run: python -m pytest -q
+
+  secrets:
+    name: secrets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
