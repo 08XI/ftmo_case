@@ -33,6 +33,14 @@ def test_parse_claude_output_reads_cost_model_and_tokens():
     assert result.denials == ["Edit"]
 
 
+def test_denials_include_the_blocked_shell_command():
+    stdout = json.dumps({
+        "type": "result", "subtype": "success", "is_error": False, "result": "ok",
+        "permission_denials": [{"tool_name": "Bash", "tool_input": {"command": "cd x &&\n  python -m pytest"}}],
+    })
+    assert parse_claude_output(stdout).denials == ["Bash(cd x && python -m pytest)"]
+
+
 def test_parse_claude_output_raises_on_error_even_with_success_subtype():
     stdout = json.dumps({"type": "result", "subtype": "success", "is_error": True,
                          "result": "Failed to authenticate"})

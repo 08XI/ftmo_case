@@ -52,6 +52,16 @@ def extract_json_block(text: str) -> dict:
     return value
 
 
+def _denial(item: object) -> str:
+    """Tool name, plus the shell command when there is one, so policy gaps show up in the ledger note."""
+    if not isinstance(item, dict):
+        return str(item)
+    name = str(item.get("tool_name"))
+    tool_input = item.get("tool_input")
+    command = tool_input.get("command") if isinstance(tool_input, dict) else None
+    return f"{name}({' '.join(str(command).split())[:80]})" if command else name
+
+
 def parse_claude_output(stdout: str) -> RunResult:
     try:
         data = json.loads(stdout)
@@ -66,8 +76,7 @@ def parse_claude_output(stdout: str) -> RunResult:
     model = max(model_usage, key=lambda m: model_usage[m].get("costUSD", 0)) if model_usage else "unknown"
     tokens_in = sum(int(usage.get(k) or 0)
                     for k in ("input_tokens", "cache_read_input_tokens", "cache_creation_input_tokens"))
-    denials = [str(d.get("tool_name")) if isinstance(d, dict) else str(d)
-               for d in data.get("permission_denials") or []]
+    denials = [_denial(d) for d in data.get("permission_denials") or []]
     return RunResult(
         text=str(data.get("result", "")), model=model, runtime="claude-code",
         cost_usd=float(data.get("total_cost_usd") or 0), tokens_in=tokens_in,

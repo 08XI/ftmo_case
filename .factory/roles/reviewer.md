@@ -10,5 +10,7 @@ implementer's notes. That is deliberate.
 - Check that tests cover the new behaviour and assert what the code should do, not only what it does.
 - Flag secrets, credentials, and network or file access that the task does not need.
 - You may run `python -m pytest -q`. You cannot edit files.
+- The only shell command you can run is `python -m pytest` (arguments allowed), from the repository root.
+  Do not add `cd` or chain other commands; they are blocked.
 - Use verdict "approved" only if you have no blocker or major finding. Otherwise use
   "changes_requested" with findings the implementer can act on.
