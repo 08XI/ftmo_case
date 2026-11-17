@@ -41,7 +41,16 @@ jobs:
         env:
           HEAD_REF: ${{ github.event.pull_request.head.ref }}
           APPROVER_ARGS: ${{ steps.approvals.outputs.args }}
-        run: factory verify --task "${HEAD_REF#factory/}" --check-approvals $APPROVER_ARGS
+          # Off until the repo can enforce it with branch protection (public or GitHub Pro).
+          # Turn on: gh variable set FACTORY_REQUIRE_APPROVAL --body true
+          REQUIRE_APPROVAL: ${{ vars.FACTORY_REQUIRE_APPROVAL }}
+        run: |
+          if [ "$REQUIRE_APPROVAL" = "true" ]; then
+            factory verify --task "${HEAD_REF#factory/}" --check-approvals $APPROVER_ARGS
+          else
+            echo "::warning::independent-approval check is off; set repo variable FACTORY_REQUIRE_APPROVAL=true to enforce it"
+            factory verify --task "${HEAD_REF#factory/}"
+          fi
       - name: tests
         run: python -m pytest -q
 
