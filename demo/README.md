@@ -1,6 +1,7 @@
 # Demo script
 
 Prereqs: venv active (`source .venv/Scripts/activate`), clean `main`, `FACTORY_USER=<your GitHub login>`.
+`claude` must be on PATH; the native Windows installer puts it in `~/.local/bin` (`export PATH="$HOME/.local/bin:$PATH"` in Git Bash).
 
 Live (Claude Code):
 
