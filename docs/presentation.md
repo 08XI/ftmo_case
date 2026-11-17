@@ -125,7 +125,7 @@ Fake dry run result: 6 ledger entries (initiator, planner, plan_approval, implem
 - Tests are run by the factory, not trusted from the agent's report.
 - Protected invariants: agents cannot edit `tests/invariants/**` or `.factory/**`; verify catches it if they do.
 - gitleaks on every PR.
-- Reviewer eval: 5 cases (1 control that should be approved, 4 seeded invariant bugs that should be rejected). Catch rate: **pending, not yet run** (the live run costs API credit; it waits for a decision).
+- Reviewer eval: 5 cases (1 control that should be approved, 4 seeded invariant bugs that should be rejected). Result (Sonnet, one run per case, $0.29): **5/5**. All 4 seeded bugs got `changes_requested` and the control was approved ([evals/results/latest.md](../evals/results/latest.md)). Caveats: 5 cases, one sample each, and the bugs are easy to spot in a small diff. This shows the blind reviewer is not rubber-stamping; it is not a catch rate for real changes.
 
 ## 8. Non-engineers (1 min)
 
@@ -155,4 +155,5 @@ Source: [BUILD_LOG.md](../BUILD_LOG.md). Budget is about 4 h of human time; agen
 - What went wrong, from the reviews: the ledger split lines on Unicode separators; ledger commits swept in pre-staged files; a `claude.CMD` timeout hung; a `user.name` fallback weakened the approver rule; verify let approver `" alice"` and empty strings through. All fixed with tests (5 fix commits).
 - Plan errors: a test used `run_reviewer` before it existed; a clone ran before fixtures were committed; the plan expected 7 ledger rows where 6 is correct.
 - Live run (Task 16): two rehearsals, $0.88 in total. The first exposed blocked shell commands, so the role prompts were tuned (the prompt hash changes in the ledger).
-- Not done yet: GitHub repo, PR and branch protection, live reviewer eval, screen capture.
+- Reviewer eval: 5/5 for $0.29 (one sample per case).
+- Not done yet: GitHub repo, PR and branch protection, screen capture.
