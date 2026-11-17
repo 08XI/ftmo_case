@@ -35,8 +35,12 @@ def load(task_dir: Path) -> list[LedgerEntry]:
     path = Path(task_dir) / LEDGER_FILE
     if not path.exists():
         return []
+    try:
+        text = path.read_text(encoding="utf-8")
+    except UnicodeDecodeError as exc:
+        raise LedgerError(f"{path.name}: not valid UTF-8: {exc}") from exc
     entries = []
-    for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+    for lineno, line in enumerate(text.split("\n"), start=1):
         if not line.strip():
             continue
         try:
@@ -53,7 +57,13 @@ def append(task_dir: Path, **fields: Any) -> LedgerEntry:
     draft = LedgerEntry.model_validate(data).model_dump(mode="json")
     draft["hash"] = entry_hash(draft)
     entry = LedgerEntry.model_validate(draft)
-    with (Path(task_dir) / LEDGER_FILE).open("a", encoding="utf-8", newline="\n") as fh:
+    path = Path(task_dir) / LEDGER_FILE
+    if path.exists() and path.stat().st_size > 0:
+        with path.open("rb") as fh:
+            fh.seek(-1, 2)
+            if fh.read(1) != b"\n":
+                raise LedgerError(f"{path.name}: missing trailing newline; refusing to append")
+    with path.open("a", encoding="utf-8", newline="\n") as fh:
         fh.write(canonical(entry.model_dump(mode="json")).decode("utf-8") + "\n")
     return entry
 

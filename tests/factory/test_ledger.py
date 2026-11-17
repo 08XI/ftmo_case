@@ -45,3 +45,29 @@ def test_invalid_line_raises(tmp_path):
     (tmp_path / ledger.LEDGER_FILE).write_text("{not json}\n", encoding="utf-8")
     with pytest.raises(LedgerError):
         ledger.load(tmp_path)
+
+
+def test_load_survives_unicode_line_separators_in_values(tmp_path):
+    entry = ledger.append(
+        tmp_path, task="T-1", role="initiator", actor=Actor(kind="human", id="alice"),
+        on_behalf_of="alice", cost_usd=0.0, started_at="t0", ended_at="t1", note="a\u2028b\x85c",
+    )
+    entries = ledger.load(tmp_path)
+    assert len(entries) == 1
+    assert entries[0].note == "a\u2028b\x85c"
+    assert entries[0].hash == entry.hash
+    assert ledger.check_chain(entries) == []
+
+
+def test_append_refuses_file_without_trailing_newline(tmp_path):
+    _append(tmp_path)
+    path = tmp_path / ledger.LEDGER_FILE
+    path.write_bytes(path.read_bytes().rstrip(b"\n"))
+    with pytest.raises(LedgerError):
+        _append(tmp_path)
+
+
+def test_load_wraps_invalid_utf8(tmp_path):
+    (tmp_path / ledger.LEDGER_FILE).write_bytes(b"\xff\xfe{}\n")
+    with pytest.raises(LedgerError):
+        ledger.load(tmp_path)
