@@ -1,0 +1,66 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "done": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Done",
+      "type": "array"
+    },
+    "files_touched": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Files Touched",
+      "type": "array"
+    },
+    "open_questions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Open Questions",
+      "type": "array"
+    },
+    "remaining": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Remaining",
+      "type": "array"
+    },
+    "status": {
+      "enum": [
+        "complete",
+        "in_progress",
+        "blocked"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "summary": {
+      "minLength": 1,
+      "title": "Summary",
+      "type": "string"
+    },
+    "tests": {
+      "enum": [
+        "passing",
+        "failing",
+        "not_run"
+      ],
+      "title": "Tests",
+      "type": "string"
+    }
+  },
+  "required": [
+    "summary",
+    "done",
+    "remaining",
+    "files_touched",
+    "tests",
+    "status"
+  ],
+  "title": "Handoff",
+  "type": "object"
+}

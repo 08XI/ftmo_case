@@ -1,0 +1,70 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "base_commit": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Base Commit",
+      "type": "string"
+    },
+    "branch": {
+      "title": "Branch",
+      "type": "string"
+    },
+    "created_at": {
+      "title": "Created At",
+      "type": "string"
+    },
+    "goal": {
+      "minLength": 1,
+      "title": "Goal",
+      "type": "string"
+    },
+    "id": {
+      "pattern": "^T-[A-Za-z0-9-]+$",
+      "title": "Id",
+      "type": "string"
+    },
+    "initiator": {
+      "description": "Accountable human (GitHub login)",
+      "minLength": 1,
+      "title": "Initiator",
+      "type": "string"
+    },
+    "max_review_loops": {
+      "default": 3,
+      "minimum": 1,
+      "title": "Max Review Loops",
+      "type": "integer"
+    },
+    "protected_paths": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Protected Paths",
+      "type": "array"
+    },
+    "test_command": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Test Command",
+      "type": "array"
+    },
+    "title": {
+      "minLength": 1,
+      "title": "Title",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "title",
+    "goal",
+    "initiator",
+    "base_commit",
+    "branch",
+    "created_at"
+  ],
+  "title": "Task",
+  "type": "object"
+}

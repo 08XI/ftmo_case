@@ -1,0 +1,48 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "invariants_affected": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Invariants Affected",
+      "type": "array"
+    },
+    "risks": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Risks",
+      "type": "array"
+    },
+    "steps": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Steps",
+      "type": "array"
+    },
+    "summary": {
+      "minLength": 1,
+      "title": "Summary",
+      "type": "string"
+    },
+    "test_plan": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Test Plan",
+      "type": "array"
+    }
+  },
+  "required": [
+    "summary",
+    "steps",
+    "invariants_affected",
+    "test_plan"
+  ],
+  "title": "Plan",
+  "type": "object"
+}
