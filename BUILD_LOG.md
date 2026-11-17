@@ -28,7 +28,7 @@ Agent time and cost are tracked separately; agents often run while the human rev
 | 2026-11-17 12:10 | Task 18 Step 5: live reviewer eval (Sonnet) | ? (go-ahead) | 1 min | $0.29 | 5 reviewer runs on seeded diffs | Not yet | - | Score 5/5: 4 seeded invariant bugs rejected, control approved. One sample per case and obvious bugs, so it is a sanity check, not a catch rate |
 | 2026-11-17 11:04–11:57 | Controller session (Opus): dispatch, plan-diff checks, review triage, build log | ? | 53 min wall-clock | - | Orchestration of 30 subagent runs (17 implementer, 7 review, 6 fix) | - | - | - |
 
-**Totals so far (Tasks 1–16, 18 Steps 1–4 and 6, 19):** live agent cost $0.88 for two full rehearsals plus $0.29 for the reviewer eval; agent wall-clock about 53 min for the controller session; the subagents ran inside it. Human time for this part is unknown ("?"): the user was not asked to review per task. Not done yet: Task 17 (GitHub repo, PR, branch protection), Task 19 Step 7 (screen capture).
+**Totals so far (Tasks 1–16, 18, 19):** live agent cost $0.88 for two full rehearsals plus $0.29 for the reviewer eval; agent wall-clock about 53 min for the controller session; the subagents ran inside it. Human time for this part is unknown ("?"): the user was not asked to review per task. Not done yet: Task 17 (GitHub repo, PR, branch protection), Task 19 Step 7 (screen capture).
 
 ## Deviations from the plan (Tasks 1–15, 18)
 
