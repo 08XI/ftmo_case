@@ -43,7 +43,7 @@ def test_approver_edit_to_plan_is_recorded(repo):
 def test_roles_cannot_run_out_of_order(repo):
     ref = core.new_task(repo, "t", "g", task_id="T-001")
     with pytest.raises(WorkflowError):
-        core.approve_plan(ref)  # deviation: run_reviewer lands in a later task
+        core.run_reviewer(ref, fake())
 
 
 def test_invalid_agent_output_writes_no_entry(repo):

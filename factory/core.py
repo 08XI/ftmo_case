@@ -325,3 +325,47 @@ def record_human(ref: TaskRef, message: str, user: str | None = None) -> LedgerE
                           started_at=started, ended_at=utc_now())
     _commit_ledger(ref, entry, [])
     return entry
+
+
+def run_tests(repo: Path, command: list[str]) -> tuple[bool, str]:
+    cmd = [sys.executable if i == 0 and part == "python" else part for i, part in enumerate(command)]
+    try:
+        proc = subprocess.run(cmd, cwd=repo, capture_output=True, text=True, encoding="utf-8",
+                              errors="replace", timeout=900)
+    except subprocess.TimeoutExpired:
+        return False, "test run timed out after 900s"
+    lines = (proc.stdout + proc.stderr).splitlines()
+    return proc.returncode == 0, "\n".join(lines[-60:])
+
+
+def run_reviewer(ref: TaskRef, runtime: Runtime, test_runner: TestRunner | None = None) -> LedgerEntry:
+    task, entries = _require(ref, "reviewer")
+    _require_clean(ref.repo)
+    head = gitutil.head(ref.repo)
+    tests_ok, test_log = (test_runner or (lambda repo: run_tests(repo, task.test_command)))(ref.repo)
+    sections = [
+        ("Task", _read(ref, "task.json")),
+        ("Approved plan", _read(ref, "plan.md")),
+        ("Diff under review", f"```diff\n{gitutil.diff(ref.repo, task.base_commit, head)}\n```"),
+        ("Test run by the factory", f"result: {'PASSED' if tests_ok else 'FAILED'}\n\n```\n{test_log}\n```"),
+    ]
+    review, result, role_sha, started = _call_agent(ref, task, entries, "reviewer", runtime, sections, Review)
+    _reject_changes(ref, "reviewer")
+    note = f"factory test run {'passed' if tests_ok else 'failed'}"
+    if not tests_ok and review.verdict == "approved":
+        review = Review(
+            verdict="changes_requested",
+            summary=f"[factory override] the test suite failed; the agent verdict was 'approved'. {review.summary}",
+            findings=[Finding(severity="blocker", file="(test suite)", message="factory test run failed"),
+                      *review.findings],
+            invariants_checked=review.invariants_checked,
+        )
+        note += "; agent approval overridden"
+    name = f"review-{sum(1 for e in entries if e.role == 'reviewer') + 1:03d}.json"
+    _write_model(ref.path(name), review)
+    entry = ledger.append(ref.dir, **_agent_fields(
+        ref, task, "reviewer", result, role_sha, started,
+        inputs={**_hash_of(ref, "task.json", "plan.md"), "head": head},
+        outputs=_hash_of(ref, name), commits=[], note=note))
+    _commit_ledger(ref, entry, [name])
+    return entry
