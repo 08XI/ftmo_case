@@ -48,18 +48,16 @@ class TaskRef:
 # ---------- reading state ----------
 
 def resolve_user(repo: Path) -> str:
-    """Who is acting: FACTORY_USER, else the gh login, else git user.name."""
+    """Who is acting: FACTORY_USER, else the gh login (a display name never matches reviewer logins)."""
     if os.environ.get("FACTORY_USER"):
         return os.environ["FACTORY_USER"]
     try:
-        proc = subprocess.run(["gh", "api", "user", "--jq", ".login"], capture_output=True, text=True, timeout=15)
+        proc = subprocess.run(["gh", "api", "user", "--jq", ".login"], capture_output=True, text=True, timeout=15,
+                              stdin=subprocess.DEVNULL)
         if proc.returncode == 0 and proc.stdout.strip():
             return proc.stdout.strip()
     except (OSError, subprocess.TimeoutExpired):
         pass
-    name = gitutil.config(repo, "user.name")
-    if name:
-        return name
     raise FactoryError("cannot resolve your identity; set FACTORY_USER to your GitHub login")
 
 
@@ -67,7 +65,10 @@ def load_task(ref: TaskRef) -> Task:
     path = ref.path("task.json")
     if not path.exists():
         raise FactoryError(f"task {ref.task_id} not found at {path}")
-    return Task.model_validate_json(path.read_text(encoding="utf-8"))
+    try:
+        return Task.model_validate_json(path.read_text(encoding="utf-8"))
+    except (ValidationError, ValueError) as exc:
+        raise FactoryError(f"task {ref.task_id}: invalid task.json: {exc}") from exc
 
 
 def read_entries(ref: TaskRef) -> list[LedgerEntry]:
@@ -204,10 +205,13 @@ def new_task(repo: Path, title: str, goal: str, task_id: str | None = None,
     user = user or resolve_user(repo)
     base = gitutil.head(repo)
     branch = f"factory/{task_id}"
+    try:
+        task = Task(id=task_id, title=title, goal=goal, initiator=user, base_commit=base, branch=branch,
+                    protected_paths=protected_paths or ["tests/invariants/**"], created_at=utc_now())
+    except ValidationError as exc:
+        raise FactoryError(f"invalid task: {exc}") from exc
     gitutil.git(repo, "checkout", "-q", "-b", branch)
     ref.dir.mkdir(parents=True)
-    task = Task(id=task_id, title=title, goal=goal, initiator=user, base_commit=base, branch=branch,
-                protected_paths=protected_paths or ["tests/invariants/**"], created_at=utc_now())
     _write_model(ref.path("task.json"), task)
     now = utc_now()
     entry = ledger.append(ref.dir, task=task_id, role="initiator", actor=_human(user), on_behalf_of=user,
@@ -236,6 +240,9 @@ def approve_plan(ref: TaskRef, user: str | None = None, note: str | None = None)
     _require_clean(ref.repo, allow=(ref.rel("plan.md"),))
     user = user or resolve_user(ref.repo)
     recorded = latest_output(entries, "plan.md")[1]
+    raw = ref.path("plan.md").read_bytes()
+    if b"\r\n" in raw:
+        ref.path("plan.md").write_bytes(raw.replace(b"\r\n", b"\n"))
     current = ledger.sha256_file(ref.path("plan.md"))
     notes = [n for n in ("approver edited the plan" if current != recorded else None, note) if n]
     now = utc_now()
