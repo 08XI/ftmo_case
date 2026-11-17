@@ -67,7 +67,7 @@ Where humans step in: starting the task, the plan gate (cheapest place to catch 
 
 ## 4. Live demo (10 min)
 
-The live run and the PR are planned, not yet done. The fake runtime replays recorded role outputs and is the fallback. A screen capture of both is a separate manual step.
+The live run works: two rehearsals with Sonnet in scratch clones cost $0.59 and $0.28 for the whole task (planner, implementer, reviewer), took about 3 to 5 minutes, and ended `RESULT: PASS`. The PR is not opened yet. The fake runtime replays recorded role outputs and is the fallback. A screen capture of both is a separate manual step.
 
 Script (full text in [demo/README.md](../demo/README.md)):
 
@@ -154,4 +154,5 @@ Source: [BUILD_LOG.md](../BUILD_LOG.md). Budget is about 4 h of human time; agen
 - Human time: many cells in the log are still "?". I do not have honest numbers for those yet, so I do not quote a total.
 - What went wrong, from the reviews: the ledger split lines on Unicode separators; ledger commits swept in pre-staged files; a `claude.CMD` timeout hung; a `user.name` fallback weakened the approver rule; verify let approver `" alice"` and empty strings through. All fixed with tests (5 fix commits).
 - Plan errors: a test used `run_reviewer` before it existed; a clone ran before fixtures were committed; the plan expected 7 ledger rows where 6 is correct.
-- Not done yet: live Claude run, GitHub repo, PR and branch protection, live reviewer eval, screen capture.
+- Live run (Task 16): two rehearsals, $0.88 in total. The first exposed blocked shell commands, so the role prompts were tuned (the prompt hash changes in the ledger).
+- Not done yet: GitHub repo, PR and branch protection, live reviewer eval, screen capture.
