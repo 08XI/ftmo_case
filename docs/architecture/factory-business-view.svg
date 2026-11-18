@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Business view of the software factory: the full picture, with the part built in this repository highlighted.
+  Hand-maintained; edit this file directly. Sources: docs/presentation.md (sections 2, 3, 8, 9, 10) and the design doc.
+  Built = exists in this repo. Planned = named in the roadmap, not built. Move a box between styles when that changes.
+  Text fit: at 12.5px a line holds about 30 characters per 200px of box width.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 800" width="1080" height="800" role="img" aria-labelledby="t d">
+  <title id="t">Software factory: business view</title>
+  <desc id="d">Engineers, team and platform leads, compliance and audit, and later non-engineers use the software factory. The highlighted core, built in this repository, is a hand-off protocol and CLI: a task, a plan, a human plan gate, a build, a blind review and a human pull request approval, backed by typed hand-offs, guardrails and a hash-chained ledger. Agent runtimes fill the roles. The pull request enters the company's unchanged delivery pipeline. Signed attestations, ledger metrics, policy packs and an IDE front-end are planned, not built.</desc>
+  <style>
+    :root { --bg:#ffffff; --card:#d0d7de; --text:#1f2328; --muted:#57606a; --line:#424a53;
+            --int-fill:#dbeafe; --int-stroke:#1d4ed8; --ext-fill:#eaeef2; --ext-stroke:#57606a;
+            --per-fill:#1e3a8a; --per-text:#ffffff; --group-stroke:#8c959f;
+            --plan-stroke:#6e7781; --pill-text:#ffffff; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg:#0d1117; --card:#30363d; --text:#e6edf3; --muted:#9da7b3; --line:#c9d1d9;
+              --int-fill:#12304f; --int-stroke:#58a6ff; --ext-fill:#21262d; --ext-stroke:#8b949e;
+              --per-fill:#1f4fb4; --per-text:#ffffff; --group-stroke:#8b949e;
+              --plan-stroke:#8b949e; --pill-text:#0d1117; }
+    }
+    text { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: var(--text); }
+    .h1 { font-size: 20px; font-weight: 700; }
+    .sub { font-size: 14px; fill: var(--muted); }
+    .band { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; fill: var(--muted); }
+    .t { font-size: 15px; font-weight: 700; text-anchor: middle; }
+    .s { font-size: 12.5px; text-anchor: middle; fill: var(--muted); }
+    .l { font-size: 12.5px; fill: var(--muted); }
+    .lc { font-size: 12.5px; fill: var(--muted); text-anchor: middle; }
+    .person { fill: var(--per-fill); stroke: var(--per-fill); }
+    .int { fill: var(--int-fill); stroke: var(--int-stroke); stroke-width: 1.5; }
+    .cap { fill: var(--int-fill); stroke: var(--int-stroke); stroke-width: 1.5; }
+    .ext { fill: var(--ext-fill); stroke: var(--ext-stroke); stroke-width: 1.5; }
+    .plan { fill: var(--bg); stroke: var(--plan-stroke); stroke-width: 1.5; stroke-dasharray: 6 4; }
+    .plan-person { fill: var(--bg); stroke: var(--per-fill); stroke-width: 1.5; stroke-dasharray: 6 4; }
+    .core { fill: var(--bg); stroke: var(--int-stroke); stroke-width: 3; }
+    .group { fill: var(--bg); stroke: var(--group-stroke); stroke-width: 1; }
+    .pill { fill: var(--int-stroke); }
+    .pill-text { font-size: 11.5px; font-weight: 700; letter-spacing: 0.05em; text-anchor: middle; fill: var(--pill-text); }
+    text.on-person { fill: var(--per-text); }
+    .edge { fill: none; stroke: var(--line); stroke-width: 1.5; marker-end: url(#arrow); }
+    .edge.dashed { stroke-dasharray: 5 4; }
+    .head { fill: var(--line); }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" class="head"/>
+    </marker>
+  </defs>
+
+  <rect x="0.5" y="0.5" width="1079" height="799" rx="10" fill="var(--bg)" stroke="var(--card)"/>
+
+  <!-- Title -->
+  <text class="h1" x="30" y="38">Software factory: business view</text>
+  <text class="sub" x="30" y="60">The full picture. The highlighted core is what this repository builds; dashed items are planned.</text>
+
+  <!-- Users -->
+  <text class="band" x="50" y="92">WHO USES IT</text>
+  <rect class="person" x="50" y="104" width="210" height="70" rx="8"/>
+  <text class="t on-person" x="155" y="130">Engineers</text>
+  <text class="s on-person" x="155" y="149">Start tasks, approve plans</text>
+  <text class="s on-person" x="155" y="164">and pull requests</text>
+
+  <rect class="person" x="300" y="104" width="210" height="70" rx="8"/>
+  <text class="t on-person" x="405" y="130">Team and platform leads</text>
+  <text class="s on-person" x="405" y="149">Share role prompts, track</text>
+  <text class="s on-person" x="405" y="164">cost and files per task</text>
+
+  <rect class="person" x="550" y="104" width="210" height="70" rx="8"/>
+  <text class="t on-person" x="655" y="130">Compliance and audit</text>
+  <text class="s on-person" x="655" y="149">Ask who requested, built,</text>
+  <text class="s on-person" x="655" y="164">checked and approved</text>
+
+  <rect class="plan-person" x="800" y="104" width="210" height="70" rx="8"/>
+  <text class="t" x="905" y="130">Non-engineers</text>
+  <text class="s" x="905" y="149">Via approved template repos</text>
+  <text class="s" x="905" y="164">(sketch only)</text>
+
+  <path class="edge" d="M155 174 V205"/>
+  <path class="edge" d="M405 174 V205"/>
+  <path class="edge" d="M655 174 V205"/>
+  <path class="edge dashed" d="M905 174 V205"/>
+
+  <!-- Core: built in this repository -->
+  <rect class="core" x="30" y="205" width="1020" height="280" rx="12"/>
+  <text class="t" x="56" y="233" style="text-anchor:start;font-size:16px">Hand-off protocol and factory CLI</text>
+  <rect class="pill" x="872" y="216" width="158" height="24" rx="12"/>
+  <text class="pill-text" x="951" y="232">BUILT IN THIS REPO</text>
+
+  <!-- Workflow -->
+  <rect class="person" x="40" y="250" width="145" height="64" rx="8"/>
+  <text class="t on-person" x="112.5" y="276">Task</text>
+  <text class="s on-person" x="112.5" y="296">Human starts it</text>
+
+  <rect class="int" x="211" y="250" width="145" height="64" rx="8"/>
+  <text class="t" x="283.5" y="276">Plan</text>
+  <text class="s" x="283.5" y="296">Agent, read-only</text>
+
+  <rect class="person" x="382" y="250" width="145" height="64" rx="8"/>
+  <text class="t on-person" x="454.5" y="276">Plan gate</text>
+  <text class="s on-person" x="454.5" y="296">Human approves</text>
+
+  <rect class="int" x="553" y="250" width="145" height="64" rx="8"/>
+  <text class="t" x="625.5" y="276">Build</text>
+  <text class="s" x="625.5" y="296">Agent codes, tests</text>
+
+  <rect class="int" x="724" y="250" width="145" height="64" rx="8"/>
+  <text class="t" x="796.5" y="276">Review</text>
+  <text class="s" x="796.5" y="296">Agent, blind review</text>
+
+  <rect class="person" x="895" y="250" width="145" height="64" rx="8"/>
+  <text class="t on-person" x="967.5" y="276">PR approval</text>
+  <text class="s on-person" x="967.5" y="296">Human, not the author</text>
+
+  <path class="edge" d="M185 282 H211"/>
+  <path class="edge" d="M356 282 H382"/>
+  <path class="edge" d="M527 282 H553"/>
+  <path class="edge" d="M698 282 H724"/>
+  <path class="edge" d="M869 282 H895"/>
+  <path class="edge" d="M796.5 314 V336 H625.5 V316"/>
+  <text class="lc" x="711" y="354">changes requested, up to 3 rounds</text>
+
+  <!-- Capabilities -->
+  <rect class="cap" x="40" y="385" width="320" height="70" rx="8"/>
+  <text class="t" x="200" y="411">Typed hand-offs</text>
+  <text class="s" x="200" y="431">Schema-validated tasks, plans, hand-offs</text>
+  <text class="s" x="200" y="446">and reviews, stored in git</text>
+
+  <rect class="cap" x="380" y="385" width="320" height="70" rx="8"/>
+  <text class="t" x="540" y="411">Guardrails</text>
+  <text class="s" x="540" y="431">Protected invariants, a blind reviewer,</text>
+  <text class="s" x="540" y="446">tests run by the factory itself</text>
+
+  <rect class="cap" x="720" y="385" width="320" height="70" rx="8"/>
+  <text class="t" x="880" y="411">Provenance</text>
+  <text class="s" x="880" y="431">Hash-chained ledger and factory verify:</text>
+  <text class="s" x="880" y="446">who, which model, what changed</text>
+
+  <!-- Edges out of the core -->
+  <path class="edge" d="M310 485 V525"/>
+  <text class="l" x="318" y="511">launch a role, collect its output</text>
+  <path class="edge" d="M730 485 V525"/>
+  <text class="l" x="738" y="511">pull request</text>
+
+  <!-- Runtimes -->
+  <rect class="group" x="30" y="525" width="560" height="115" rx="12"/>
+  <text class="l" x="50" y="547">Fill the roles: any agent runtime, or a person</text>
+  <rect class="int" x="50" y="560" width="160" height="62" rx="8"/>
+  <text class="t" x="130" y="586">Claude Code</text>
+  <text class="s" x="130" y="606">Live runtime</text>
+  <rect class="int" x="230" y="560" width="160" height="62" rx="8"/>
+  <text class="t" x="310" y="586">Recorded replay</text>
+  <text class="s" x="310" y="606">Offline demos, tests</text>
+  <rect class="plan" x="410" y="560" width="160" height="62" rx="8"/>
+  <text class="t" x="490" y="586">Other runtimes</text>
+  <text class="s" x="490" y="606">Planned</text>
+
+  <!-- Delivery pipeline -->
+  <rect class="group" x="620" y="525" width="430" height="115" rx="12"/>
+  <text class="l" x="640" y="547">Company delivery pipeline</text>
+  <rect class="int" x="640" y="560" width="180" height="62" rx="8"/>
+  <text class="t" x="730" y="586">Pull request checks</text>
+  <text class="s" x="730" y="606">verify, tests, gitleaks</text>
+  <rect class="ext" x="860" y="560" width="180" height="62" rx="8"/>
+  <text class="t" x="950" y="586">Merge and deploy</text>
+  <text class="s" x="950" y="606">Existing, unchanged</text>
+  <path class="edge" d="M820 591 H860"/>
+
+  <!-- Planned -->
+  <text class="band" x="50" y="670">PLANNED AROUND THE CORE, NOT BUILT</text>
+  <rect class="plan" x="40" y="680" width="240" height="70" rx="8"/>
+  <text class="t" x="160" y="706">Signed attestations</text>
+  <text class="s" x="160" y="726">Sign each ledger entry</text>
+  <text class="s" x="160" y="741">(sigstore, gitsign)</text>
+
+  <rect class="plan" x="293" y="680" width="240" height="70" rx="8"/>
+  <text class="t" x="413" y="706">Metrics from the ledger</text>
+  <text class="s" x="413" y="726">Cost and loop counts</text>
+  <text class="s" x="413" y="741">per change, dashboard</text>
+
+  <rect class="plan" x="547" y="680" width="240" height="70" rx="8"/>
+  <text class="t" x="667" y="706">Policy packs and prompts</text>
+  <text class="s" x="667" y="726">Per-repo rules and a shared</text>
+  <text class="s" x="667" y="741">role prompt library</text>
+
+  <rect class="plan" x="800" y="680" width="240" height="70" rx="8"/>
+  <text class="t" x="920" y="706">IDE and MCP front-end</text>
+  <text class="s" x="920" y="726">Start and follow tasks</text>
+  <text class="s" x="920" y="741">from the editor</text>
+
+  <!-- Legend -->
+  <rect class="person" x="50" y="770" width="22" height="14" rx="3"/>
+  <text class="l" x="82" y="782">Human step or person</text>
+  <rect class="int" x="290" y="770" width="22" height="14" rx="3"/>
+  <text class="l" x="322" y="782">Built in this repository</text>
+  <rect class="ext" x="560" y="770" width="22" height="14" rx="3"/>
+  <text class="l" x="592" y="782">Existing company system</text>
+  <rect class="plan" x="840" y="770" width="22" height="14" rx="3"/>
+  <text class="l" x="872" y="782">Planned, not built</text>
+</svg>

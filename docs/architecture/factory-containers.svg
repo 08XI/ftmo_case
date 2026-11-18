@@ -29,7 +29,7 @@
     .person { fill: var(--per-fill); stroke: var(--per-fill); }
     .int { fill: var(--int-fill); stroke: var(--int-stroke); stroke-width: 1.5; }
     .ext { fill: var(--ext-fill); stroke: var(--ext-stroke); stroke-width: 1.5; }
-    .bound { fill: var(--bound-fill); stroke: var(--bound-stroke); stroke-width: 1.5; stroke-dasharray: 6 4; }
+    .bound { fill: var(--bg); stroke: var(--bound-stroke); stroke-width: 1.5; stroke-dasharray: 6 4; }
     .on-person text, text.on-person { fill: var(--per-text); }
     .edge { fill: none; stroke: var(--line); stroke-width: 1.5; marker-end: url(#arrow); }
     .head { fill: var(--line); }

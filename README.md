@@ -12,6 +12,14 @@ It serves teams that must show how an agent-built change came about and who appr
 - **Independent verification.** `factory verify` runs nine checks. CI can add a tenth: approval by a human who is neither the initiator nor the plan approver.
 - **Swappable runtimes.** Roles run as headless Claude Code, or from recorded outputs for offline demos and tests.
 
+## Where it fits
+
+![Business view of the software factory](docs/architecture/factory-business-view.svg)
+
+The highlighted core is what this repository builds: the hand-off protocol, the `factory` CLI, the guardrails and the ledger. Agents and people fill the roles. The pull request then enters the company's existing delivery pipeline. The factory adds only its own checks to the pull request; merge and deploy stay as they are.
+
+Dashed boxes are planned and not built: signed attestations, metrics from the ledger, policy packs and a shared prompt library, an IDE or MCP front-end, a path for non-engineers, and more agent runtimes. They come from the roadmap in [docs/presentation.md](docs/presentation.md).
+
 ## Architecture
 
 ![Container view of the software factory](docs/architecture/factory-containers.svg)
