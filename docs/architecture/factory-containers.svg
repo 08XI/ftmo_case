@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  C4 container view of the software factory. Hand-maintained; edit this file directly.
+  Layout grid: columns at x = 50, 310, 570, 830 (box width 200, gap 60); rows at y = 95, 230, 340, 490, 650.
+  Keep text inside the box: at 12.5px a line holds about 30 characters per 200px of box width.
+  Each box carries the module it represents (see factory/*.py). Update the diagram when a module is added or removed.
+  Light and dark colours are CSS variables at the top of the style block.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 760" width="1080" height="760" role="img" aria-labelledby="t d">
+  <title id="t">Software factory: container view</title>
+  <desc id="d">A developer and GitHub Actions call the factory CLI. The CLI contains commands, a workflow engine, agent runtimes, a verifier, reports, and a ledger and git layer. Agent runtimes call the Claude Code CLI, which edits code in the git repository. The report component pushes to GitHub.</desc>
+  <style>
+    :root { --bg:#ffffff; --card:#d0d7de; --text:#1f2328; --muted:#57606a; --line:#424a53;
+            --int-fill:#dbeafe; --int-stroke:#1d4ed8; --ext-fill:#eaeef2; --ext-stroke:#57606a;
+            --per-fill:#1e3a8a; --per-text:#ffffff; --bound-fill:#f6f8fa; --bound-stroke:#6e7781; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg:#0d1117; --card:#30363d; --text:#e6edf3; --muted:#9da7b3; --line:#c9d1d9;
+              --int-fill:#12304f; --int-stroke:#58a6ff; --ext-fill:#21262d; --ext-stroke:#8b949e;
+              --per-fill:#1f4fb4; --per-text:#ffffff; --bound-fill:#161b22; --bound-stroke:#8b949e; }
+    }
+    text { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: var(--text); }
+    .h1 { font-size: 20px; font-weight: 700; }
+    .sub { font-size: 14px; fill: var(--muted); }
+    .t { font-size: 15px; font-weight: 700; text-anchor: middle; }
+    .s { font-size: 12.5px; text-anchor: middle; fill: var(--muted); }
+    .l { font-size: 12.5px; fill: var(--muted); }
+    .le { font-size: 12.5px; fill: var(--muted); text-anchor: end; }
+    .lc { font-size: 12.5px; fill: var(--muted); text-anchor: middle; }
+    .person { fill: var(--per-fill); stroke: var(--per-fill); }
+    .int { fill: var(--int-fill); stroke: var(--int-stroke); stroke-width: 1.5; }
+    .ext { fill: var(--ext-fill); stroke: var(--ext-stroke); stroke-width: 1.5; }
+    .bound { fill: var(--bound-fill); stroke: var(--bound-stroke); stroke-width: 1.5; stroke-dasharray: 6 4; }
+    .on-person text, text.on-person { fill: var(--per-text); }
+    .edge { fill: none; stroke: var(--line); stroke-width: 1.5; marker-end: url(#arrow); }
+    .head { fill: var(--line); }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" class="head"/>
+    </marker>
+  </defs>
+
+  <rect x="0.5" y="0.5" width="1079" height="759" rx="10" fill="var(--bg)" stroke="var(--card)"/>
+
+  <!-- Title -->
+  <text class="h1" x="30" y="38">Software factory: container view</text>
+  <text class="sub" x="30" y="60">Roles hand work to each other through git. Every hand-off becomes one entry in a hash-chained ledger.</text>
+
+  <!-- Legend -->
+  <text class="l" x="50" y="104" style="font-weight:700">Legend</text>
+  <rect class="person" x="50" y="114" width="22" height="14" rx="3"/>
+  <text class="l" x="82" y="126">Person</text>
+  <rect class="int" x="50" y="136" width="22" height="14" rx="3"/>
+  <text class="l" x="82" y="148">Component of the factory CLI</text>
+  <rect class="ext" x="50" y="158" width="22" height="14" rx="3"/>
+  <text class="l" x="82" y="170">External system or data store</text>
+
+  <!-- People and CI -->
+  <rect class="person" x="310" y="95" width="200" height="70" rx="8"/>
+  <text class="t on-person" x="410" y="124">Developer</text>
+  <text class="s on-person" x="410" y="142">Starts tasks, approves</text>
+  <text class="s on-person" x="410" y="158">plans and the pull request</text>
+
+  <rect class="ext" x="830" y="95" width="200" height="70" rx="8"/>
+  <text class="t" x="930" y="124">GitHub Actions</text>
+  <text class="s" x="930" y="142">Checks factory/* PRs</text>
+  <text class="s" x="930" y="158">(verify, tests, gitleaks)</text>
+
+  <!-- System boundary -->
+  <rect class="bound" x="30" y="215" width="1020" height="375" rx="12"/>
+  <text class="t" x="50" y="244" style="text-anchor:start">factory CLI</text>
+  <text class="l" x="50" y="262">Python package: typer, pydantic</text>
+
+  <!-- Commands -->
+  <rect class="int" x="310" y="230" width="720" height="60" rx="8"/>
+  <text class="t" x="670" y="256">Commands</text>
+  <text class="s" x="670" y="275">cli.py: the single entry point, <tspan style="font-family:Consolas,Menlo,monospace">factory</tspan></text>
+
+  <!-- Row: runtimes, engine, verifier, reports -->
+  <rect class="int" x="50" y="340" width="200" height="92" rx="8"/>
+  <text class="t" x="150" y="366">Agent runtimes</text>
+  <text class="s" x="150" y="386">runtime.py</text>
+  <text class="s" x="150" y="402">Headless Claude Code, or a</text>
+  <text class="s" x="150" y="418">recorded replay (fake)</text>
+
+  <rect class="int" x="310" y="340" width="200" height="92" rx="8"/>
+  <text class="t" x="410" y="366">Workflow engine</text>
+  <text class="s" x="410" y="386">core.py, workflow.py</text>
+  <text class="s" x="410" y="402">Enforces role order and</text>
+  <text class="s" x="410" y="418">protected paths</text>
+
+  <rect class="int" x="570" y="340" width="200" height="92" rx="8"/>
+  <text class="t" x="670" y="366">Verifier</text>
+  <text class="s" x="670" y="386">verify.py</text>
+  <text class="s" x="670" y="402">Recomputes the ledger and</text>
+  <text class="s" x="670" y="418">checks it against git</text>
+
+  <rect class="int" x="830" y="340" width="200" height="92" rx="8"/>
+  <text class="t" x="930" y="366">Reports and PR</text>
+  <text class="s" x="930" y="386">report.py</text>
+  <text class="s" x="930" y="402">Status, PR body, and</text>
+  <text class="s" x="930" y="418">PR creation through gh</text>
+
+  <!-- Ledger and git layer -->
+  <rect class="int" x="310" y="490" width="590" height="80" rx="8"/>
+  <text class="t" x="605" y="518">Ledger and git layer</text>
+  <text class="s" x="605" y="538">ledger.py, gitutil.py, schemas.py</text>
+  <text class="s" x="605" y="554">Hash-chained ledger.jsonl, typed task files, git commits with trailers</text>
+
+  <!-- External: Claude Code, git repository, GitHub -->
+  <rect class="ext" x="50" y="650" width="200" height="80" rx="8"/>
+  <text class="t" x="150" y="680">Claude Code CLI</text>
+  <text class="s" x="150" y="700">Runs one role per call</text>
+  <text class="s" x="150" y="716">with a tool allow-list</text>
+
+  <rect class="ext" x="330" y="650" width="440" height="80" rx="8"/>
+  <text class="t" x="550" y="668">Git repository (local)</text>
+  <text class="s" x="550" y="687">Branch factory/&lt;id&gt;, task folder .factory/tasks/&lt;id&gt;/</text>
+  <text class="s" x="550" y="703">(task, plan, hand-offs, reviews, ledger.jsonl),</text>
+  <text class="s" x="550" y="719">role prompts, and the code under change (orders/)</text>
+
+  <rect class="ext" x="830" y="650" width="200" height="80" rx="8"/>
+  <text class="t" x="930" y="680">GitHub</text>
+  <text class="s" x="930" y="700">Remote, pull requests,</text>
+  <text class="s" x="930" y="716">and reviews</text>
+
+  <!-- Edges -->
+  <path class="edge" d="M410 165 V230"/>
+  <text class="l" x="420" y="196">runs factory commands</text>
+  <path class="edge" d="M930 165 V230"/>
+  <text class="le" x="920" y="196">factory verify</text>
+
+  <path class="edge" d="M410 290 V340"/>
+  <text class="l" x="418" y="320">new, run, approve-plan, record</text>
+  <path class="edge" d="M670 290 V340"/>
+  <text class="l" x="678" y="320">verify</text>
+  <path class="edge" d="M930 290 V340"/>
+  <text class="le" x="922" y="320">status, pr, pr-body</text>
+
+  <path class="edge" d="M310 386 H250"/>
+  <text class="lc" x="280" y="378">run role</text>
+
+  <path class="edge" d="M410 432 V490"/>
+  <text class="l" x="418" y="466">append entry, commit</text>
+  <path class="edge" d="M670 432 V490"/>
+  <text class="l" x="678" y="466">recompute</text>
+  <path class="edge" d="M860 432 V490"/>
+  <text class="le" x="852" y="466">read entries</text>
+
+  <path class="edge" d="M150 432 V650"/>
+  <text class="l" x="158" y="520">headless run,</text>
+  <text class="l" x="158" y="536">allowed tools only</text>
+
+  <path class="edge" d="M1000 432 V650"/>
+  <text class="le" x="992" y="466">push, open PR</text>
+
+  <path class="edge" d="M540 570 V650"/>
+  <text class="l" x="548" y="625">files and commits (git CLI)</text>
+
+  <path class="edge" d="M250 690 H330"/>
+  <text class="lc" x="290" y="682">edits code</text>
+</svg>
