@@ -41,6 +41,47 @@ def test_cannot_fill_cancelled_order():
         order.fill(Decimal("1"))
 
 
+def test_cancel_partially_filled_order():
+    order = Order("o-7", Side.BUY, Decimal("10"))
+    order.fill(Decimal("4"))
+    order.cancel()
+    assert order.state is OrderState.CANCELLED
+    assert order.filled == Decimal("4")
+    assert order.remaining == Decimal("6")
+
+
+def test_cannot_fill_cancelled_partially_filled_order():
+    order = Order("o-8", Side.BUY, Decimal("10"))
+    order.fill(Decimal("4"))
+    order.cancel()
+    with pytest.raises(OrderError):
+        order.fill(Decimal("1"))
+    assert order.filled == Decimal("4")
+    assert order.state is OrderState.CANCELLED
+
+
+def test_cannot_cancel_filled_order():
+    order = Order("o-9", Side.BUY, Decimal("10"))
+    order.fill(Decimal("10"))
+    with pytest.raises(OrderError):
+        order.cancel()
+    assert order.state is OrderState.FILLED
+    assert order.filled == Decimal("10")
+
+
+@pytest.mark.parametrize("fill_qty", [None, Decimal("4")])
+def test_cannot_cancel_twice(fill_qty):
+    order = Order("o-10", Side.BUY, Decimal("10"))
+    if fill_qty is not None:
+        order.fill(fill_qty)
+    order.cancel()
+    filled_before = order.filled
+    with pytest.raises(OrderError):
+        order.cancel()
+    assert order.state is OrderState.CANCELLED
+    assert order.filled == filled_before
+
+
 def test_quantity_must_be_positive():
     with pytest.raises(OrderError):
         Order("o-6", Side.BUY, Decimal("0"))

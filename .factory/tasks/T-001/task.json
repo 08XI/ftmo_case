@@ -1,0 +1,19 @@
+{
+  "id": "T-001",
+  "title": "Cancel remaining quantity of partially filled orders",
+  "goal": "A partially filled order can be cancelled; filled quantity is kept; FILLED stays terminal.",
+  "initiator": "08XI",
+  "base_commit": "6854e8fa500699c595e978ce9ba49d6a34ceb90b",
+  "branch": "factory/T-001",
+  "protected_paths": [
+    "tests/invariants/**"
+  ],
+  "test_command": [
+    "python",
+    "-m",
+    "pytest",
+    "-q"
+  ],
+  "max_review_loops": 3,
+  "created_at": "2026-11-17T11:21:40Z"
+}
