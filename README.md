@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/boxik.svg" width="240" alt="Boxík, the software factory mascot: a friendly cardboard box with open flaps, waving and holding a wrench">
+</p>
+
 # Software factory
 
 Software factory is a command-line tool and hand-off protocol for code changes written by AI agents and people. Planner, implementer and reviewer roles pass work to each other through typed files in git. A hash-chained ledger records every hand-off: who acted, with which prompt and model, and what changed. `factory verify` checks the ledger against git and policy, locally and in CI.
